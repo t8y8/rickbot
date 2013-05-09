@@ -1,15 +1,23 @@
 #!/usr/bin/python3
 import sqlite3
 import random
-from bottle import Bottle, run, template, static_file, request, redirect
+import sys
 from datetime import datetime
+from bottle import Bottle, run, template, static_file, request, redirect
 
-version = "3.4.3"
+version = "3.4.4"
 
 #Constants
 DB_FILE = 'rick.db'
-PORT = 80
 HOST = '0.0.0.0'
+
+if sys.argv[1].lower() == 'debug':
+    PORT = 8080
+    SERVER = 'wsgiref'
+else:
+    PORT = 80
+    SERVER = 'cherrypy'
+
 
 app = Bottle()
 
@@ -162,4 +170,4 @@ def error404(error):
 
 
 if __name__ == '__main__':
-    run(app=app, host=HOST, port=PORT, server='cherrypy', reloader=True)
+    run(app=app, host=HOST, port=PORT, server=SERVER, reloader=True)
