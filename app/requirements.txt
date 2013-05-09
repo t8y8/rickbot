@@ -1,3 +1,0 @@
-CherryPy==3.2.4
-bottle==0.11.6
-distribute==0.6.35
