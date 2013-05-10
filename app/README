@@ -1,0 +1,8 @@
+=== RICKBOT ===
+
+= Install
+
+= Develop
+* Download from GitHub
+* Run "python3 rick.py debug" for a local debug instance
+* Access it via: http://127.0.0.1:8080

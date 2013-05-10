@@ -9,15 +9,15 @@ version = "3.4.4"
 
 #Constants
 DB_FILE = 'rick.db'
-HOST = '0.0.0.0'
 
 if sys.argv[1].lower() == 'debug':
     PORT = 8080
     SERVER = 'wsgiref'
+    HOST = '127.0.0.1'
 else:
     PORT = 80
     SERVER = 'cherrypy'
-
+    HOST = '0.0.0.0'
 
 app = Bottle()
 
