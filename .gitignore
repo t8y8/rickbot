@@ -164,5 +164,4 @@ pip-log.txt
 .DS_Store
 
 #Not needed for dev
-bottle.py
 requirements.txt
