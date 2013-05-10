@@ -1,13 +1,13 @@
 #!/usr/bin/python3
-import sqlite3
 import random
 import sys
+import sqlite3
 from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 version = "3.4.4"
 
-#Constants
+# Constants
 DB_FILE = 'rick.db'
 
 if sys.argv[1].lower() == 'debug':
@@ -22,7 +22,7 @@ else:
 app = Bottle()
 
 
-#Database functions
+# Database functions
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     with sqlite3.connect(DB_FILE) as db:
@@ -35,7 +35,8 @@ def get_quote_from_db(id_no=None):
         result = cur.execute(
             '''SELECT saying FROM sayings WHERE id = ?''', (idx,))
         # return the saying AND index so we can generate the static link
-        return (result.fetchone()[0].encode("8859", "ignore").decode("utf8","ignore"), idx)
+        return (result.fetchone()[0].encode("8859", "ignore")
+                                    .decode("utf8", "ignore"), idx)
 
 
 def insert_quote_into_db(text):
@@ -95,7 +96,7 @@ def search(keyword):
     return search_results
 
 
-#ROUTES
+# ROUTES
 @app.route('/static/<filename:path>')
 def send_static(filename):
     '''define routes for static files'''
@@ -117,12 +118,6 @@ def index():
     share_link = "{}quote/{}".format(request.url, str(quote_no))
     return template('rickbot', rickquote=rick_quote,
                     shareme=share_link, shareme2=share_link)
-
-
-@app.route('/rick.py')
-def redirect_to_index():
-    '''Redirect old bookmarks'''
-    redirect('/')
 
 
 @app.route('/quote', method="POST")
