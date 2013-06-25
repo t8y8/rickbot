@@ -6,12 +6,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
  </head>
  <body>
- <h2> All Quotes </h2>
- <ul>
+%mklink = lambda url, id: "http://{}/quote/{}".format(url, id)
+%link_url =  req_url
+<ul>
 %for quote in list_of_quotes:
-    <li> {{"{} | {} | {}".format(quote[0], quote[1], quote[2])}} </li>
+    <li> 
+        <a href={{ "{}".format(mklink(link_url, quote[0])) }} > {{ quote[0] }}</a> {{"| {} | {}".format(quote[1], quote[2]) }}
 %end
  </ul>
- </body>
-</html>
 
+</body>
+</html>

@@ -13,7 +13,7 @@
                 <table>
                     <tr>
                         <td>
-                            <h1>Rickbot 3.4</h1>
+                            <h1>Rickbot 3.5</h1>
                         </td>
                     </tr>
                 </table>

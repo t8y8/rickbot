@@ -1,28 +1,20 @@
 #!/usr/bin/python3
-import random
-import sys
 import sqlite3
-from datetime import datetime
+import random
 from bottle import Bottle, run, template, static_file, request, redirect
+from datetime import datetime
 
-version = "3.4.4"
+version = "3.5"
 
-# Constants
+#Constants
 DB_FILE = 'rick.db'
-
-if sys.argv[1].lower() == 'debug':
-    PORT = 8080
-    SERVER = 'wsgiref'
-    HOST = '127.0.0.1'
-else:
-    PORT = 80
-    SERVER = 'cherrypy'
-    HOST = '0.0.0.0'
+PORT = 80
+HOST = '0.0.0.0'
 
 app = Bottle()
 
 
-# Database functions
+#Database functions
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     with sqlite3.connect(DB_FILE) as db:
@@ -35,8 +27,7 @@ def get_quote_from_db(id_no=None):
         result = cur.execute(
             '''SELECT saying FROM sayings WHERE id = ?''', (idx,))
         # return the saying AND index so we can generate the static link
-        return (result.fetchone()[0].encode("8859", "ignore")
-                                    .decode("utf8", "ignore"), idx)
+        return (result.fetchone()[0].encode("8859", "ignore").decode("utf8","ignore"), idx)
 
 
 def insert_quote_into_db(text):
@@ -68,6 +59,12 @@ def check_no_dupe(text):
     else:
         return True
 
+def query_db(query, db):
+    with sqlite3.connect(db) as db:
+        cur = db.cursor()
+        res = cur.execute(query).fetchall()
+        return res
+
 
 def list_all():
     '''returns all sayings from the table'''
@@ -96,7 +93,7 @@ def search(keyword):
     return search_results
 
 
-# ROUTES
+#ROUTES
 @app.route('/static/<filename:path>')
 def send_static(filename):
     '''define routes for static files'''
@@ -118,6 +115,12 @@ def index():
     share_link = "{}quote/{}".format(request.url, str(quote_no))
     return template('rickbot', rickquote=rick_quote,
                     shareme=share_link, shareme2=share_link)
+
+
+@app.route('/rick.py')
+def redirect_to_index():
+    '''Redirect old bookmarks'''
+    redirect('/')
 
 
 @app.route('/quote', method="POST")
@@ -149,7 +152,8 @@ def display_quote(quoteno):
 def list_all_quotes():
     '''route for listing all quotes'''
     quotes = list_all()
-    return template('list', list_of_quotes=quotes)
+    req_url = request.urlparts[1]
+    return template('list', list_of_quotes=quotes, req_url=req_url)
 
 
 @app.route('/search/<keyword>')
@@ -165,4 +169,4 @@ def error404(error):
 
 
 if __name__ == '__main__':
-    run(app=app, host=HOST, port=PORT, server=SERVER, reloader=True)
+    run(app=app, host=HOST, port=PORT, server='cherrypy', reloader=True)
