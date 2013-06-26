@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sqlite3
 import random
+import sys
 from bottle import Bottle, run, template, static_file, request, redirect
 from datetime import datetime
 
@@ -8,8 +9,16 @@ version = "3.5"
 
 #Constants
 DB_FILE = 'rick.db'
-PORT = 80
-HOST = '0.0.0.0'
+
+if sys.argv[1].lower() == 'debug':
+    PORT = 8080
+    SERVER = 'wsgiref'
+    HOST = '127.0.0.1'
+else:
+    PORT = 80
+    SERVER = 'cherrypy'
+    HOST = '0.0.0.0'
+
 
 app = Bottle()
 
@@ -17,28 +26,21 @@ app = Bottle()
 #Database functions
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
-    with sqlite3.connect(DB_FILE) as db:
-        cur = db.cursor()
-        if not id_no:
-            idx_lst = cur.execute('''SELECT id FROM sayings''').fetchall()
-            idx = random.choice(idx_lst)[0]  # extracts a random id
-        else:
-            idx = id_no
-        result = cur.execute(
-            '''SELECT saying FROM sayings WHERE id = ?''', (idx,))
-        # return the saying AND index so we can generate the static link
-        return (result.fetchone()[0].encode("8859", "ignore").decode("utf8","ignore"), idx)
+    if not id_no:
+        idx_lst = query_db("SELECT id FROM sayings", DB_FILE)
+        idx = random.choice(idx_lst)[0]  # extracts a random id
+    else:
+        idx = id_no
+    result = query_db("SELECT saying FROM sayings WHERE id = ?", DB_FILE, params=(idx,))[0]
+    # return the saying AND index so we can generate the static link
+    return (result[0].encode("8859", "ignore").decode("utf8","ignore"), idx)
 
 
 def insert_quote_into_db(text):
     '''Insert Rick's saying into the DB'''
     now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
     val_text = clean_text(text)
-    with sqlite3.connect(DB_FILE) as db:
-        cur = db.cursor()
-        cur.execute("INSERT INTO sayings (date, saying) VALUES (?,?)",
-                    (now_date, val_text))
-        db.commit()
+    insert_db("INSERT INTO sayings (date, saying) VALUES (?,?)", (now_date, val_text), DB_FILE)
 
 
 def alpha_only(text):
@@ -47,31 +49,37 @@ def alpha_only(text):
 
 def check_no_dupe(text):
     dupes = []
-    with sqlite3.connect(DB_FILE) as db:
-        cur = db.cursor()
-        results = cur.execute('''SELECT id, saying FROM sayings''').fetchall()
-        for row in results:
-            quote = alpha_only(row[1])
-            dupes.append(hash(quote))
+    results = query_db("SELECT id, saying FROM sayings", DB_FILE)
+    for row in results:
+        quote = alpha_only(row[1])
+        dupes.append(hash(quote))
     inst_text = alpha_only(text)
     if hash(inst_text) in dupes:
         return False
     else:
         return True
 
-def query_db(query, db):
+def query_db(query, db, *, params=None):
     with sqlite3.connect(db) as db:
         cur = db.cursor()
-        res = cur.execute(query).fetchall()
+        if params:
+            res = cur.execute(query, params).fetchall()
+        else:
+            res = cur.execute(query).fetchall()
         return res
 
+def insert_db(query, vals, db):
+    with sqlite3.connect(db) as db:
+        cur = db.cursor()
+        try:
+            res = cur.execute(query, vals)
+            db.commit()
+        except Exception as e:
+            return e, str(e)
 
 def list_all():
     '''returns all sayings from the table'''
-    with sqlite3.connect(DB_FILE) as db:
-        cur = db.cursor()
-        res = cur.execute("SELECT * FROM sayings").fetchall()
-        return res
+    return query_db("SELECT * FROM sayings", DB_FILE)
 
 
 def clean_text(text):
@@ -169,4 +177,4 @@ def error404(error):
 
 
 if __name__ == '__main__':
-    run(app=app, host=HOST, port=PORT, server='cherrypy', reloader=True)
+    run(app=app, host=HOST, port=PORT, server=SERVER, reloader=True)
