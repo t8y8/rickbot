@@ -11,10 +11,11 @@ version = "3.5"
 #Constants
 DB_FILE = 'rick.db'
 
-if len(sys.argv) > 0 and sys.argv[1].lower() == 'debug':
-    PORT = 8080
-    SERVER = 'wsgiref'
-    HOST = '127.0.0.1'
+if len(sys.argv) > 0:
+    if sys.argv[1].lower() == 'debug':
+        PORT = 8080
+        SERVER = 'wsgiref'
+        HOST = '127.0.0.1'
 else:
     PORT = 80
     SERVER = 'cherrypy'
