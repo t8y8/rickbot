@@ -41,7 +41,7 @@ def get_quote_from_db(id_no=None):
     result = query_db("SELECT saying FROM sayings WHERE id = ?",
                       DB_FILE, params=(idx,))[0]
     # return the saying AND index so we can generate the static link
-    return (result[0].encode("8859", "ignore").decode("utf8","ignore"), idx)
+    return (result[0].encode("8859", "ignore").decode("utf8", "ignore"), idx)
 
 
 def insert_quote_into_db(text):
@@ -72,6 +72,7 @@ def check_no_dupe(text):
     else:
         return True
 
+
 def query_db(query, db, *, params=None):
     with sqlite3.connect(db) as db:
         cur = db.cursor()
@@ -83,6 +84,7 @@ def query_db(query, db, *, params=None):
             res = cur.execute(query).fetchall()
         return res
 
+
 def insert_db(query, vals, db):
     with sqlite3.connect(db) as db:
         cur = db.cursor()
@@ -92,6 +94,7 @@ def insert_db(query, vals, db):
             db.commit()
         except Exception as e:
             return e, str(e)
+
 
 def list_all():
     '''returns all sayings from the table'''
