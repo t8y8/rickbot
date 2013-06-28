@@ -11,7 +11,7 @@ version = "3.5"
 #Constants
 DB_FILE = 'rick.db'
 
-if len(sys.argv) > 0:
+if len(sys.argv) > 1:
     if sys.argv[1].lower() == 'debug':
         PORT = 8080
         SERVER = 'wsgiref'
