@@ -165,3 +165,4 @@ pip-log.txt
 
 #Not needed for dev
 requirements.txt
+rickbot.log
