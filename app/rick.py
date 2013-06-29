@@ -11,6 +11,7 @@ version = "3.5"
 #Constants
 DB_FILE = 'rick.db'
 
+#Ugly way to check for args
 if len(sys.argv) > 1:
     if sys.argv[1].lower() == 'debug':
         PORT = 8080
@@ -48,7 +49,7 @@ def insert_quote_into_db(text):
     '''Insert Rick's saying into the DB'''
     now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
     val_text = clean_text(text)
-    logging.info("INSERTING {} into DB".format())
+    logging.info("INSERTING {} into DB".format(val_text))
     insert_db("INSERT INTO sayings (date, saying) VALUES (?,?)",
               (now_date, val_text), DB_FILE)
 
