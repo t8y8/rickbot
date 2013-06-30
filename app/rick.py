@@ -1,17 +1,20 @@
 #!/usr/bin/python3
 import logging
-import sqlite3
 import random
+import sqlite3
 import sys
-from bottle import Bottle, run, template, static_file, request, redirect
 from datetime import datetime
+
+# Bottle.py imports
+from bottle import Bottle, run, template, static_file, request, redirect
+
 
 version = "3.5"
 
-#Constants
+# Constants
 DB_FILE = 'rick.db'
 
-#Ugly way to check for args
+# Ugly way to check for args
 if len(sys.argv) > 1:
     if sys.argv[1].lower() == 'debug':
         PORT = 8080
@@ -22,14 +25,14 @@ else:
     SERVER = 'cherrypy'
     HOST = '0.0.0.0'
 
-#Logging
+# Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO)
 
-#Create the explicit application object
+# Create the explicit application object
 app = Bottle()
 
 
-#Database functions
+# Database functions
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     if not id_no:
@@ -121,7 +124,7 @@ def search(keyword):
     return search_results
 
 
-#ROUTES
+# ROUTES
 @app.route('/static/<filename:path>')
 def send_static(filename):
     '''define routes for static files'''
