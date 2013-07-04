@@ -9,7 +9,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5"
+version = "3.5.3"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -36,12 +36,10 @@ app = Bottle()
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     if not id_no:
-        logging.info("Querying DB for IDs")
         idx_lst = query_db("SELECT id FROM sayings", DB_FILE)
         idx = random.choice(idx_lst)[0]  # extracts a random id
     else:
         idx = id_no
-    logging.info("Querying DB for specific quote {}".format(id_no))
     result = query_db("SELECT saying FROM sayings WHERE id = ?",
                       DB_FILE, params=(idx,))[0]
     # return the saying AND index so we can generate the static link
@@ -62,16 +60,14 @@ def alpha_only(text):
 
 
 def check_no_dupe(text):
-    dupes = []
-    logging.info("Querying DB to check for duplicates")
+    dupes = set()
     results = query_db("SELECT id, saying FROM sayings", DB_FILE)
-    logging.info("Checking for already existing quote: {}".format(text))
     for row in results:
         quote = alpha_only(row[1])
-        dupes.append(hash(quote))
+        dupes.add(hash(quote))
     inst_text = alpha_only(text)
     if hash(inst_text) in dupes:
-        logging.warning("Quote '{}' is a duplicate".format(text))
+        logging.info("Quote '{}' is a duplicate".format(text))
         return False
     else:
         return True
@@ -97,7 +93,7 @@ def insert_db(query, vals, db):
             res = cur.execute(query, vals)
             db.commit()
         except Exception as e:
-            return e, str(e)
+            logging.error("Something went wrong: {}".format(str(e)))
 
 
 def list_all():
@@ -140,7 +136,7 @@ def get_favicon():
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
-    logging.info("{} requested a quote".format(request.remote_addr))
+    logging.info("{} requested a random quote".format(request.remote_addr))
     quote_and_saying = get_quote_from_db()
     rick_quote = quote_and_saying[0]
     quote_no = quote_and_saying[1]
@@ -171,6 +167,8 @@ def put_quote():
 @app.route('/quote/<quoteno>', method="GET")
 def display_quote(quoteno):
     '''route for displaying a specific quote'''
+    logging.info("{} is asking for a specific quote".format(
+        request.remote_addr))
     try:
         quote_and_saying = get_quote_from_db(quoteno)
     except:
