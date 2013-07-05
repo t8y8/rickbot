@@ -9,7 +9,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.3"
+version = "3.5.5"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -137,12 +137,10 @@ def get_favicon():
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote_and_saying = get_quote_from_db()
-    rick_quote = quote_and_saying[0]
-    quote_no = quote_and_saying[1]
+    quote_and_id = get_quote_from_db()
+    quote, quote_no = quote_and_id[0], quote_and_id[1]
     share_link = "{}quote/{}".format(request.url, str(quote_no))
-    return template('rickbot', rickquote=rick_quote,
-                    shareme=share_link, shareme2=share_link)
+    return template('rickbot', rickquote=quote, shareme=share_link)
 
 
 @app.route('/rick.py')
@@ -170,13 +168,11 @@ def display_quote(quoteno):
     logging.info("{} is asking for a specific quote".format(
         request.remote_addr))
     try:
-        quote_and_saying = get_quote_from_db(quoteno)
+        quote_and_id = get_quote_from_db(quoteno)
     except:
-        redirect('/')
-    rick_quote = quote_and_saying[0]
-    quote_no = quote_and_saying[1]
-    return template('rickbot', rickquote=rick_quote,
-                    shareme=request.url, shareme2=request.url)
+        redirect('/')  # Silently fail for better experience
+    quote, quote_no = quote_and_id[0], quote_and_id[1]
+    return template('rickbot', rickquote=quote, shareme=request.url)
 
 
 @app.route('/list', method="GET")
