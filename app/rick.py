@@ -9,7 +9,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.5"
+version = "3.5.6"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -56,10 +56,12 @@ def insert_quote_into_db(text):
 
 
 def alpha_only(text):
+    '''Strips a string down to no whitespace or punctuation'''
     return "".join([c.lower() for c in text if c.isalnum()])
 
 
 def check_no_dupe(text):
+    '''Uses built in hasing to detect duplicates'''
     dupes = set()
     results = query_db("SELECT id, saying FROM sayings", DB_FILE)
     for row in results:
@@ -74,6 +76,7 @@ def check_no_dupe(text):
 
 
 def query_db(query, db, *, params=None):
+    '''Generic db function. Send query with optional kwonly params'''
     with sqlite3.connect(db) as db:
         cur = db.cursor()
         if params:
@@ -86,6 +89,7 @@ def query_db(query, db, *, params=None):
 
 
 def insert_db(query, vals, db):
+    '''Generic db function. Insert query with vals'''
     with sqlite3.connect(db) as db:
         cur = db.cursor()
         try:
@@ -137,8 +141,7 @@ def get_favicon():
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote_and_id = get_quote_from_db()
-    quote, quote_no = quote_and_id[0], quote_and_id[1]
+    quote, quote_no = get_quote_from_db()
     share_link = "{}quote/{}".format(request.url, str(quote_no))
     return template('rickbot', rickquote=quote, shareme=share_link)
 
@@ -168,10 +171,9 @@ def display_quote(quoteno):
     logging.info("{} is asking for a specific quote".format(
         request.remote_addr))
     try:
-        quote_and_id = get_quote_from_db(quoteno)
+        quote = get_quote_from_db(quoteno)[0]
     except:
         redirect('/')  # Silently fail for better experience
-    quote, quote_no = quote_and_id[0], quote_and_id[1]
     return template('rickbot', rickquote=quote, shareme=request.url)
 
 
@@ -179,7 +181,7 @@ def display_quote(quoteno):
 def list_all_quotes():
     '''route for listing all quotes'''
     quotes = list_all()
-    req_url = request.urlparts[1]
+    req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
 
@@ -192,6 +194,7 @@ def search_for(keyword):
 
 @app.error(404)
 def error404(error):
+    '''Custom 404 page'''
     return "<h1>No matching route found</h1>"
 
 
