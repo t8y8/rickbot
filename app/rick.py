@@ -10,10 +10,13 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.7"
+version = "3.5.8"
 
 # Constants
 DB_FILE = 'rick.db'
+
+# Logging
+logging.basicConfig(filename="rickbot.log", level=logging.INFO)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -24,10 +27,7 @@ try:
 except:
     ENVIRON = {'host': "127.0.0.1", 'port':
                8080, 'server': 'wsgiref', 'debug': 'true'}
-    logging.info("Loaded default config. dicct")
-
-# Logging
-logging.basicConfig(filename="rickbot.log", level=logging.INFO)
+    logging.info("Loaded default config dict")
 
 # Create the explicit application object
 app = Bottle()
