@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import configparser
 import logging
 import random
 import sqlite3
@@ -9,21 +10,21 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.6"
+version = "3.5.7"
 
 # Constants
 DB_FILE = 'rick.db'
 
-# Ugly way to check for args
-if len(sys.argv) > 1:
-    if sys.argv[1].lower() == 'debug':
-        PORT = 8080
-        SERVER = 'wsgiref'
-        HOST = '127.0.0.1'
-else:
-    PORT = 80
-    SERVER = 'cherrypy'
-    HOST = '0.0.0.0'
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+try:
+    ENVIRON = config['RICKBOT']
+    logging.info("Loaded config.ini")
+except:
+    ENVIRON = {'host': "127.0.0.1", 'port':
+               8080, 'server': 'wsgiref', 'debug': 'true'}
+    logging.info("Loaded default config. dicct")
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO)
@@ -69,7 +70,7 @@ def check_no_dupe(text):
         dupes.add(hash(quote))
     inst_text = alpha_only(text)
     if hash(inst_text) in dupes:
-        logging.info("Quote '{}' is a duplicate".format(text))
+        logging.error("Quote '{}' is a duplicate".format(text))
         return False
     else:
         return True
@@ -199,4 +200,4 @@ def error404(error):
 
 
 if __name__ == '__main__':
-    run(app=app, host=HOST, port=PORT, server=SERVER, reloader=True)
+    run(app=app, **ENVIRON)
