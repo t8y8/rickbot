@@ -3,7 +3,6 @@ import configparser
 import logging
 import random
 import sqlite3
-import sys
 from datetime import datetime
 
 # Bottle.py imports
@@ -76,7 +75,7 @@ def check_no_dupe(text):
         return True
 
 
-def query_db(query, db, *, params=None):
+def query_db(query, db, params=None):
     '''Generic db function. Send query with optional kwonly params'''
     with sqlite3.connect(db) as db:
         cur = db.cursor()
@@ -95,7 +94,7 @@ def insert_db(query, vals, db):
         cur = db.cursor()
         try:
             logging.info("Inserting: {} --> {}".format(query, vals))
-            res = cur.execute(query, vals)
+            cur.execute(query, vals)
             db.commit()
         except Exception as e:
             logging.error("Something went wrong: {}".format(str(e)))
