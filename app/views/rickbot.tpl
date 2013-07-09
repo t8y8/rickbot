@@ -58,8 +58,8 @@
         </div>
     </div>
 <div class=clear>&nbsp;</div>
-%root = "/".join(shareme.split('/')[:3]) + "/list"
-    <div id="Awesomeness">Powered by Awesomeness <sup>®</sup> | Share this quote: <a href="{{ shareme }}">{{ shareme }}</a> | <a href="{{ root }}"> List All </a> </div>
+%list_url = "/".join(shareme.split('/')[:3]) + "/list"
+    <div id="Awesomeness">Powered by Awesomeness <sup>®</sup> | Share this quote: <a href="{{ shareme }}">{{ shareme }}</a> | <a href="{{ list_url }}"> List All </a> </div>
 </div>
 </body>
 </html>

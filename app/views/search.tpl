@@ -9,7 +9,7 @@
 
 %if search_results:
     %for quote in search_results:
-    <li> {{"{} | {} | {}".format(quote[0], quote[1], quote[2])}}
+    <li> {{" | ".join(map(str, quote))}} </li>
     %end
 %else:
     <h1> No Matches! </h1>

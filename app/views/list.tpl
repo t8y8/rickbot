@@ -7,11 +7,12 @@
  </head>
  <body>
 %mklink = lambda url, id: "http://{}/quote/{}".format(url, id)
-%link_url =  req_url
+%link_url = req_url
 <ul>
 %for quote in list_of_quotes:
     <li> 
-        <a href={{ "{}".format(mklink(link_url, quote[0])) }} > {{ quote[0] }}</a> {{"| {} | {}".format(quote[1], quote[2]) }}
+        <a href={{ mklink(link_url, quote[0]) }} > {{ " | ".join(map(str, quote)) }} </a>
+    </li>
 %end
  </ul>
 
