@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import configparser
 import logging
-import random
 import sqlite3
 from datetime import datetime
 
@@ -9,7 +8,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.8"
+version = "3.5.9"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -36,14 +35,14 @@ app = Bottle()
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     if not id_no:
-        idx_lst = query_db("SELECT id FROM sayings", DB_FILE)
-        idx = random.choice(idx_lst)[0]  # extracts a random id
+        result, idx = query_db(
+            "SELECT saying, id FROM sayings ORDER BY RANDOM() LIMIT 1", DB_FILE)[0]
     else:
-        idx = id_no
-    result = query_db("SELECT saying FROM sayings WHERE id = ?",
-                      DB_FILE, params=(idx,))[0]
-    # return the saying AND index so we can generate the static link
-    return (result[0].encode("8859", "ignore").decode("utf8", "ignore"), idx)
+        result, idx = query_db(
+            "SELECT saying, id FROM sayings WHERE id = ?",
+            DB_FILE, params=(id_no,))[0]
+        # return the saying AND index so we can generate the static link
+    return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx)
 
 
 def insert_quote_into_db(text):
