@@ -14,7 +14,8 @@ version = "3.5.9"
 DB_FILE = 'rick.db'
 
 # Logging
-logging.basicConfig(filename="rickbot.log", level=logging.INFO)
+logging.basicConfig(filename="rickbot.log", level=logging.INFO,
+                    format='%(levelname)s - [%(asctime)s] %(message)s')
 
 config = configparser.ConfigParser()
 config.read('config.ini')
