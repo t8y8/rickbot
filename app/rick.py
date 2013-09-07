@@ -25,7 +25,7 @@ try:
     logging.info("Loaded config.ini")
 except:
     ENVIRON = {'host': "127.0.0.1", 'port':
-               8080, 'server': 'wsgiref', 'debug': 'true'}
+               8080, 'server': 'wsgiref', 'debug': 'true', 'reloader': 'true'}
     logging.info("Loaded default config dict")
 
 # Create the explicit application object
@@ -57,15 +57,15 @@ def insert_quote_into_db(text):
 
 def alpha_only(text):
     '''Strips a string down to no whitespace or punctuation'''
-    return "".join([c.lower() for c in text if c.isalnum()])
+    return "".join(c.lower() for c in text if c.isalnum())
 
 
 def check_no_dupe(text):
     '''Uses built in hasing to detect duplicates'''
     dupes = set()
-    results = query_db("SELECT id, saying FROM sayings", DB_FILE)
+    results = query_db("SELECT saying FROM sayings", DB_FILE)
     for row in results:
-        quote = alpha_only(row[1])
+        quote = alpha_only(row[0])
         dupes.add(hash(quote))
     inst_text = alpha_only(text)
     if hash(inst_text) in dupes:
@@ -185,11 +185,20 @@ def list_all_quotes():
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
 
+@app.route('/search')
+def search_page():
+    '''presents user with a search box and then redirects to serach api'''
+    keyword = request.query.get("keyword")
+    if keyword:
+        redirect('/search/' + keyword)
+    return template('search', search_results=None, searchbox=True)
+
+
 @app.route('/search/<keyword>')
-def search_for(keyword):
-    '''simple search route'''
+def search_for(keyword=None):
+    '''route for actually executing a search'''
     matches = search(keyword.lower())  # results are lowercase
-    return template('search', search_results=matches)
+    return template('search', search_results=matches, searchbox=False)
 
 
 @app.error(404)

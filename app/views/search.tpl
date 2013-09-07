@@ -11,6 +11,11 @@
     %for quote in search_results:
     <li> {{" | ".join(map(str, quote))}} </li>
     %end
+%elif searchbox:
+	<h2> Please enter a search term: </h2>
+	<form method="GET" action="/search" accept-charset="UTF-8">
+	<input type="text" class="text" name="keyword">
+	<input type="submit" value="Go">
 %else:
     <h1> No Matches! </h1>
 %end
