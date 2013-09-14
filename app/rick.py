@@ -36,23 +36,24 @@ app = Bottle()
 def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     if not id_no:
-        result, idx = query_db(
-            "SELECT saying, id FROM sayings ORDER BY RANDOM() LIMIT 1", DB_FILE)[0]
+        result, idx, name = query_db(
+            "SELECT saying, id, name FROM sayings ORDER BY RANDOM() LIMIT 1", DB_FILE)[0]
     else:
-        result, idx = query_db(
-            "SELECT saying, id FROM sayings WHERE id = ?",
+        result, idx, name = query_db(
+            "SELECT saying, id, name FROM sayings WHERE id = ?",
             DB_FILE, params=(id_no,))[0]
-        # return the saying AND index so we can generate the static link
-    return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx)
+        # return the saying, index, and name quote's source so we can generate the static link
+    return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx, name)
 
 
-def insert_quote_into_db(text):
-    '''Insert Rick's saying into the DB'''
+def insert_quote_into_db(text,name):
+    '''Insert the saying into the DB'''
     now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
     val_text = clean_text(text)
+    source_name = clean_text(name)
     logging.info("INSERTING {} into DB".format(val_text))
-    insert_db("INSERT INTO sayings (date, saying) VALUES (?,?)",
-              (now_date, val_text), DB_FILE)
+    insert_db("INSERT INTO sayings (date, saying, name) VALUES (?,?,?)",
+              (now_date, val_text, source_name), DB_FILE)
 
 
 def alpha_only(text):
@@ -141,7 +142,7 @@ def get_favicon():
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote, quote_no = get_quote_from_db()
+    quote, quote_no, name = get_quote_from_db()
     share_link = "{}quote/{}".format(request.url, str(quote_no))
     return template('rickbot', rickquote=quote, shareme=share_link)
 
