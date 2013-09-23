@@ -158,8 +158,9 @@ def put_quote():
     '''route for submitting quote'''
     logging.info("{} is submitting a quote".format(request.remote_addr))
     unval_quote = request.forms.get('saying')
+    name = "Rick"
     if len(unval_quote) > 4 and check_no_dupe(unval_quote):  # arbitrary len
-        insert_quote_into_db(unval_quote)
+        insert_quote_into_db(unval_quote, name)
         return '''You are being redirected!
         <meta HTTP-EQUIV="REFRESH" content="1; url=/">'''
     else:
