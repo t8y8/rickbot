@@ -39,18 +39,15 @@
             <table>
                 <tr>
                     <td>
-                        <h2>What did you hear Rick say?</h2>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div id="SubmitForm">
-            <table>
-                <tr>
-                    <td>
                         <form method="POST" action="/quote" accept-charset="UTF-8">
+                            <h2>What did you hear
+                            <select name="person">
+                            % for person in persons:
+                                <option value="{{ person }}"> {{ person }} </option>\\
+                            % end
+                            </select> say?</h2>
                         <input type="text" class="text" name="saying">
-                        <input type="submit" value="Said Rick">
+                        <input type="submit" value="Submit">
                         </form>
                     </td>
                 </tr>

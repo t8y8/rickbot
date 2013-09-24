@@ -144,7 +144,7 @@ def index():
     logging.info("{} requested a random quote".format(request.remote_addr))
     quote, quote_no, name = get_quote_from_db()
     share_link = "{}quote/{}".format(request.url, str(quote_no))
-    return template('rickbot', rickquote=quote, shareme=share_link)
+    return template('rickbot', rickquote=quote, shareme=share_link, persons=["Rick", "Tyler", "Evan"])
 
 
 @app.route('/rick.py')
@@ -158,7 +158,7 @@ def put_quote():
     '''route for submitting quote'''
     logging.info("{} is submitting a quote".format(request.remote_addr))
     unval_quote = request.forms.get('saying')
-    name = "Rick"
+    name = str(request.forms.get('person'))
     if len(unval_quote) > 4 and check_no_dupe(unval_quote):  # arbitrary len
         insert_quote_into_db(unval_quote, name)
         return '''You are being redirected!
@@ -176,7 +176,7 @@ def display_quote(quoteno):
         quote = get_quote_from_db(quoteno)[0]
     except:
         redirect('/')  # Silently fail for better experience
-    return template('rickbot', rickquote=quote, shareme=request.url)
+    return template('rickbot', rickquote=quote, shareme=request.url, persons=["Rick", "Evan", "Tyler"])
 
 
 @app.route('/list', method="GET")

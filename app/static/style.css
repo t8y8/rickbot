@@ -82,20 +82,16 @@ div#wrapper {
      border: 0px yellow solid;
      float: left;
      z-index:  1;
-     width: 350px;
+     width: 1000px;
      height: 40px;
+
      
 		}
 
-		div#SubmitForm  {
-    background-color: none;
-     border: 0px red solid;
-    float: right;
-     z-index:  1;
-     width: 643px;
-     height: 40px;
+        div#SubmitText h2 {
+    display: inline;
     
-		}
+        }
 
 	div#Awesomeness  {
     background-color: #00008B;
