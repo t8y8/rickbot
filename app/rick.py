@@ -42,11 +42,12 @@ def get_quote_from_db(id_no=None):
         result, idx, name = query_db(
             "SELECT saying, id, name FROM sayings WHERE id = ?",
             DB_FILE, params=(id_no,))[0]
-        # return the saying, index, and name quote's source so we can generate the static link
+        # return the saying, index, and name quote's source so we can generate
+        # the static link
     return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx, name)
 
 
-def insert_quote_into_db(text,name):
+def insert_quote_into_db(text, name):
     '''Insert the saying into the DB'''
     now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
     val_text = clean_text(text)
@@ -144,7 +145,9 @@ def index():
     logging.info("{} requested a random quote".format(request.remote_addr))
     quote, quote_no, name = get_quote_from_db()
     share_link = "{}quote/{}".format(request.url, str(quote_no))
-    return template('rickbot', rickquote=quote, shareme=share_link, persons=["Rick", "Tyler", "Evan"])
+    persons = [name[0]
+               for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
+    return template('rickbot', rickquote=quote, shareme=share_link, persons=persons)
 
 
 @app.route('/rick.py')
@@ -176,7 +179,9 @@ def display_quote(quoteno):
         quote = get_quote_from_db(quoteno)[0]
     except:
         redirect('/')  # Silently fail for better experience
-    return template('rickbot', rickquote=quote, shareme=request.url, persons=["Rick", "Evan", "Tyler"])
+        persons = [name[0]
+                   for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
+    return template('rickbot', rickquote=quote, shareme=request.url, persons=persons)
 
 
 @app.route('/list', method="GET")
