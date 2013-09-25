@@ -8,7 +8,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.9"
+version = "3.5.11"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -147,7 +147,7 @@ def index():
     share_link = "{}quote/{}".format(request.url, str(quote_no))
     persons = [name[0]
                for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
-    return template('rickbot', rickquote=quote, shareme=share_link, persons=persons)
+    return template('rickbot', rickquote=quote, shareme=share_link, persons=persons, name=name)
 
 
 @app.route('/rick.py')
@@ -176,12 +176,12 @@ def display_quote(quoteno):
     logging.info("{} is asking for a specific quote".format(
         request.remote_addr))
     try:
-        quote = get_quote_from_db(quoteno)[0]
+        quote, _, name = get_quote_from_db(quoteno)
     except:
         redirect('/')  # Silently fail for better experience
-        persons = [name[0]
-                   for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
-    return template('rickbot', rickquote=quote, shareme=request.url, persons=persons)
+    persons = [name[0]
+               for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
+    return template('rickbot', rickquote=quote, shareme=request.url, persons=persons, name=name)
 
 
 @app.route('/list', method="GET")
