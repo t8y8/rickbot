@@ -2,6 +2,8 @@
 import configparser
 import logging
 import sqlite3
+from models import Person, Quote
+from peewee import fn
 from datetime import datetime
 
 # Bottle.py imports
@@ -46,16 +48,6 @@ def get_quote_from_db(id_no=None):
         # return the saying, index, and name quote's source so we can generate
         # the static link
     return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx, name)
-
-
-def insert_quote_into_db(text, name):
-    '''Insert the saying into the DB'''
-    now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
-    val_text = clean_text(text)
-    source_name = clean_text(name)
-    logging.info("INSERTING {} into DB".format(val_text))
-    insert_db("INSERT INTO sayings (date, saying, name) VALUES (?,?,?)",
-              (now_date, val_text, source_name), DB_FILE)
 
 
 def alpha_only(text):
@@ -134,60 +126,51 @@ def send_static(filename):
 @app.route('/favicon.ico', method='GET')
 def get_favicon():
     '''route for favicon'''
-    return static_file('favicon.ico', root='static')
+    return static_file('favicon.ico', root='')
 
 
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote, quote_no, name = get_quote_from_db()
+    quote_query = Quote.select().order_by(fn.random()).limit(1).get()
+    quote, quote_no, name = quote_query.text, quote_query.id, quote_query.person_id.name
+    logging.info("requested quote no {}".format(quote_no))
     share_link = "{}quote/{}".format(request.url, str(quote_no))
-    names = query_db("SELECT DISTINCT name FROM sayings", DB_FILE)
-    persons = [name[0] for name in names]
+    persons = [row.name for row in Person.select()]
     return template('rickbot', rickquote=quote,
                     shareme=share_link, persons=persons, name=name)
 
 
-@app.route('/rick.py')
-def redirect_to_index():
-    '''Redirect old bookmarks'''
-    redirect('/')
-
-
 @app.route('/quote', method="POST")
-def put_quote():
+def put_quote2():
     '''route for submitting quote'''
-    logging.info("{} is submitting a quote".format(request.remote_addr))
-    unval_quote = request.forms.get('saying')
+    unval_quote = clean_text(request.forms.get('saying'))
     name = str(request.forms.get('person'))
-    if len(unval_quote) > 4 and check_no_dupe(unval_quote):  # arbitrary len
-        insert_quote_into_db(unval_quote, name)
-        return '''You are being redirected!
-        <meta HTTP-EQUIV="REFRESH" content="1; url=/">'''
-    else:
-        return "That is a duplicate or is too short"
+    person = Person.get(Person.name == name)
+    try:
+        Quote.create(person_id=person, text=unval_quote, entered_at=datetime.now()).save()
+        return "IT WORKED!"
+    except Exception as e:
+        return "Shit broke: {}".format(e)
 
 
 @app.route('/quote/<quoteno>', method="GET")
 def display_quote(quoteno):
     '''route for displaying a specific quote'''
-    logging.info("{} is asking for a specific quote".format(
-        request.remote_addr))
     try:
-        quote, _, name = get_quote_from_db(quoteno)
+        quote = Quote.select().where(Quote.id == quoteno).get()
     except:
         redirect('/')  # Silently fail for better experience
-    persons = [name[0]
-               for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
-    return template('rickbot', rickquote=quote,
-                    shareme=request.url, persons=persons, name=name)
+    persons = [row.name for row in Person.select()]
+    return template('rickbot', rickquote=quote.text,
+                    shareme=request.url, persons=persons, name=quote.person_id.name)
 
 
 @app.route('/list', method="GET")
 def list_all_quotes():
     '''route for listing all quotes'''
-    quotes = list_all()
+    quotes = [i for i in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
