@@ -8,7 +8,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.11"
+version = "3.5.12"
 
 # Constants
 DB_FILE = 'rick.db'
@@ -37,7 +37,8 @@ def get_quote_from_db(id_no=None):
     '''Retreive a random saying from the DB'''
     if not id_no:
         result, idx, name = query_db(
-            "SELECT saying, id, name FROM sayings ORDER BY RANDOM() LIMIT 1", DB_FILE)[0]
+            "SELECT saying, id, name FROM sayings ORDER BY RANDOM() LIMIT 1",
+            DB_FILE)[0]
     else:
         result, idx, name = query_db(
             "SELECT saying, id, name FROM sayings WHERE id = ?",
@@ -108,14 +109,11 @@ def list_all():
 
 
 def clean_text(text):
-    '''cleans text from common messes'''
-    if text.lstrip().startswith('...'):  # kuldge for Pip
-        return text.lstrip(" \t") \
-                   .replace("\uFFFD", "'")
-
-    else:
-        return text.lstrip(" .\t") \
-                   .replace("\uFFFD", "'")
+    '''cleans text from common messes'''  # TODO: Replace with regex
+    cleaned = text.lstrip(" \t")
+    cleaned = cleaned.replace("\uFFFD", "'")
+    cleaned = cleaned.encode("8859", "ignore").decode("utf8", "ignore")
+    return cleaned
 
 
 def search(keyword):
@@ -145,9 +143,10 @@ def index():
     logging.info("{} requested a random quote".format(request.remote_addr))
     quote, quote_no, name = get_quote_from_db()
     share_link = "{}quote/{}".format(request.url, str(quote_no))
-    persons = [name[0]
-               for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
-    return template('rickbot', rickquote=quote, shareme=share_link, persons=persons, name=name)
+    names = query_db("SELECT DISTINCT name FROM sayings", DB_FILE)
+    persons = [name[0] for name in names]
+    return template('rickbot', rickquote=quote,
+                    shareme=share_link, persons=persons, name=name)
 
 
 @app.route('/rick.py')
@@ -181,7 +180,8 @@ def display_quote(quoteno):
         redirect('/')  # Silently fail for better experience
     persons = [name[0]
                for name in query_db("SELECT DISTINCT name FROM sayings", DB_FILE)]
-    return template('rickbot', rickquote=quote, shareme=request.url, persons=persons, name=name)
+    return template('rickbot', rickquote=quote,
+                    shareme=request.url, persons=persons, name=name)
 
 
 @app.route('/list', method="GET")
