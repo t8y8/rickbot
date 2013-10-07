@@ -10,10 +10,8 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.12"
+__version__ = "3.6"
 
-# Constants
-DB_FILE = 'rick.db'
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
@@ -34,72 +32,6 @@ except:
 app = Bottle()
 
 
-# Database functions
-def get_quote_from_db(id_no=None):
-    '''Retreive a random saying from the DB'''
-    if not id_no:
-        result, idx, name = query_db(
-            "SELECT saying, id, name FROM sayings ORDER BY RANDOM() LIMIT 1",
-            DB_FILE)[0]
-    else:
-        result, idx, name = query_db(
-            "SELECT saying, id, name FROM sayings WHERE id = ?",
-            DB_FILE, params=(id_no,))[0]
-        # return the saying, index, and name quote's source so we can generate
-        # the static link
-    return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx, name)
-
-
-def alpha_only(text):
-    '''Strips a string down to no whitespace or punctuation'''
-    return "".join(c.lower() for c in text if c.isalnum())
-
-
-def check_no_dupe(text):
-    '''Uses built in hasing to detect duplicates'''
-    dupes = set()
-    results = query_db("SELECT saying FROM sayings", DB_FILE)
-    for row in results:
-        quote = alpha_only(row[0])
-        dupes.add(hash(quote))
-    inst_text = alpha_only(text)
-    if hash(inst_text) in dupes:
-        logging.error("Quote '{}' is a duplicate".format(text))
-        return False
-    else:
-        return True
-
-
-def query_db(query, db, params=None):
-    '''Generic db function. Send query with optional kwonly params'''
-    with sqlite3.connect(db) as db:
-        cur = db.cursor()
-        if params:
-            logging.info("Sending Query: {} with {}".format(query, params))
-            res = cur.execute(query, params).fetchall()
-        else:
-            logging.info("Sending Query: {}".format(query))
-            res = cur.execute(query).fetchall()
-        return res
-
-
-def insert_db(query, vals, db):
-    '''Generic db function. Insert query with vals'''
-    with sqlite3.connect(db) as db:
-        cur = db.cursor()
-        try:
-            logging.info("Inserting: {} --> {}".format(query, vals))
-            cur.execute(query, vals)
-            db.commit()
-        except Exception as e:
-            logging.error("Something went wrong: {}".format(str(e)))
-
-
-def list_all():
-    '''returns all sayings from the table'''
-    return query_db("SELECT * FROM sayings", DB_FILE)
-
-
 def clean_text(text):
     '''cleans text from common messes'''  # TODO: Replace with regex
     cleaned = text.lstrip(" \t")
@@ -110,9 +42,8 @@ def clean_text(text):
 
 def search(keyword):
     '''simple search `keyword` in string test'''
-    all_quotes = list_all()
-    search_results = [row for row in all_quotes
-                      if keyword in row[2].lower()]
+    search_query = Quote.select().where(Quote.text ** "%{}%".format(keyword))
+    search_results = [quote for quote in search_query]
     return search_results
 
 
@@ -143,13 +74,14 @@ def index():
 
 
 @app.route('/quote', method="POST")
-def put_quote2():
+def insert_quote():
     '''route for submitting quote'''
     unval_quote = clean_text(request.forms.get('saying'))
     name = str(request.forms.get('person'))
     person = Person.get(Person.name == name)
     try:
-        Quote.create(person_id=person, text=unval_quote, entered_at=datetime.now()).save()
+        Quote.create(person_id=person, text=unval_quote,
+                     entered_at=datetime.now()).save()
         return "IT WORKED!"
     except Exception as e:
         return "Shit broke: {}".format(e)
@@ -187,7 +119,7 @@ def search_page():
 @app.route('/search/<keyword>')
 def search_for(keyword=None):
     '''route for actually executing a search'''
-    matches = search(keyword.lower())  # results are lowercase
+    matches = search(keyword)  # results are lowercase
     return template('search', search_results=matches, searchbox=False)
 
 

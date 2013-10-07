@@ -12,9 +12,11 @@ class Person(BaseModel):
 
 class Quote(BaseModel):
     id = pw.PrimaryKeyField()
-    text = pw.CharField(unique=True)
+    text = pw.CharField()
     entered_at = pw.DateTimeField()
     person_id = pw.ForeignKeyField(Person, related_name="quotes")
 
-    def get_random():
-        return Quote.select().order_by(pw.fn.random()).limit(1)
+    class Meta:
+        indexes = (
+            (('text', 'person_id'), True),
+        )
