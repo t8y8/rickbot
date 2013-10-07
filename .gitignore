@@ -168,3 +168,4 @@ requirements.txt
 rickbot.log
 config.ini
 rick.db
+quotes.db
