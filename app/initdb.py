@@ -2,8 +2,8 @@ import peewee as pw
 from models import *
 from datetime import datetime
 
-Person.drop_table()
-Quote.drop_table()
+Person.drop_table(True)
+Quote.drop_table(True)
 
 Person.create_table()
 Quote.create_table()

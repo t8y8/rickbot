@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import configparser
 import logging
-import sqlite3
 from models import Person, Quote
 from peewee import fn
 from datetime import datetime
@@ -64,13 +63,15 @@ def get_favicon():
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote_query = Quote.select().order_by(fn.random()).limit(1).get()
-    quote, quote_no, name = quote_query.text, quote_query.id, quote_query.person_id.name
-    logging.info("requested quote no {}".format(quote_no))
-    share_link = "{}quote/{}".format(request.url, str(quote_no))
+    quote = Quote.select().order_by(fn.random()).limit(1).get()
+    logging.info("requested quote no {}".format(quote.id))
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
-    return template('rickbot', rickquote=quote,
-                    shareme=share_link, persons=persons, name=name)
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=share_link,
+                    persons=persons,
+                    name=quote.person_id.name)
 
 
 @app.route('/quote', method="POST")
@@ -95,8 +96,11 @@ def display_quote(quoteno):
     except:
         redirect('/')  # Silently fail for better experience
     persons = [row.name for row in Person.select()]
-    return template('rickbot', rickquote=quote.text,
-                    shareme=request.url, persons=persons, name=quote.person_id.name)
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=request.url,
+                    persons=persons,
+                    name=quote.person_id.name)
 
 
 @app.route('/list', method="GET")
