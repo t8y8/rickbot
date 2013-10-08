@@ -33,9 +33,10 @@ app = Bottle()
 
 def clean_text(text):
     '''cleans text from common messes'''  # TODO: Replace with regex
-    cleaned = text.lstrip(" \t")
-    cleaned = cleaned.replace("\uFFFD", "'")
-    cleaned = cleaned.encode("8859", "ignore").decode("utf8", "ignore")
+    cleaned = text.lstrip(" \t")\
+        .replace("\uFFFD", "'")\
+        .encode("8859", "ignore")\
+        .decode("utf8", "ignore")
     return cleaned
 
 
