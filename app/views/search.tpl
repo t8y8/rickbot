@@ -9,7 +9,7 @@
 
 %if search_results:
     %for quote in search_results:
-    <li> {{" | ".join(map(str, quote))}} </li>
+    <li> {{ "{} {} {}".format(quote.id, quote.text, quote.person_id.name)}}</li>
     %end
 %elif searchbox:
 	<h2> Please enter a search term: </h2>
