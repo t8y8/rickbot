@@ -11,13 +11,13 @@ from bottle import Bottle, run, template, static_file, request, redirect
 
 __version__ = "3.6"
 
-
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
                     format='%(levelname)s - [%(asctime)s] %(message)s')
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+
 
 try:
     ENVIRON = config['RICKBOT']
@@ -33,9 +33,10 @@ app = Bottle()
 
 def clean_text(text):
     '''cleans text from common messes'''  # TODO: Replace with regex
-    cleaned = text.lstrip(" \t")
-    cleaned = cleaned.replace("\uFFFD", "'")
-    cleaned = cleaned.encode("8859", "ignore").decode("utf8", "ignore")
+    cleaned = text.lstrip(" \t")\
+        .replace("\uFFFD", "'")\
+        .encode("8859", "ignore")\
+        .decode("utf8", "ignore")
     return cleaned
 
 
@@ -78,12 +79,14 @@ def index():
 def insert_quote():
     '''route for submitting quote'''
     unval_quote = clean_text(request.forms.get('saying'))
+    if len(unval_quote) < 4:
+        redirect('/', code=400)
     name = str(request.forms.get('person'))
     person = Person.get(Person.name == name)
     try:
         Quote.create(person_id=person, text=unval_quote,
-                     entered_at=datetime.now()).save()
-        return "IT WORKED!"
+                     entered_at=datetime.now().replace(microsecond=0)).save()
+        return "IT WORKED! Please hit 'back' to go back"
     except Exception as e:
         return "Shit broke: {}".format(e)
 
