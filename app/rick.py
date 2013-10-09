@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 import configparser
 import logging
-import sqlite3
+from models import Person, Quote
+from peewee import fn
 from datetime import datetime
 
 # Bottle.py imports
 from bottle import Bottle, run, template, static_file, request, redirect
 
 
-version = "3.5.9"
-
-# Constants
-DB_FILE = 'rick.db'
+__version__ = "3.6"
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
@@ -19,6 +17,7 @@ logging.basicConfig(filename="rickbot.log", level=logging.INFO,
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+
 
 try:
     ENVIRON = config['RICKBOT']
@@ -32,95 +31,19 @@ except:
 app = Bottle()
 
 
-# Database functions
-def get_quote_from_db(id_no=None):
-    '''Retreive a random saying from the DB'''
-    if not id_no:
-        result, idx = query_db(
-            "SELECT saying, id FROM sayings ORDER BY RANDOM() LIMIT 1", DB_FILE)[0]
-    else:
-        result, idx = query_db(
-            "SELECT saying, id FROM sayings WHERE id = ?",
-            DB_FILE, params=(id_no,))[0]
-        # return the saying AND index so we can generate the static link
-    return (result.encode("8859", "ignore").decode("utf8", "ignore"), idx)
-
-
-def insert_quote_into_db(text):
-    '''Insert Rick's saying into the DB'''
-    now_date = str(datetime.now().replace(microsecond=0))  # No microseconds
-    val_text = clean_text(text)
-    logging.info("INSERTING {} into DB".format(val_text))
-    insert_db("INSERT INTO sayings (date, saying) VALUES (?,?)",
-              (now_date, val_text), DB_FILE)
-
-
-def alpha_only(text):
-    '''Strips a string down to no whitespace or punctuation'''
-    return "".join(c.lower() for c in text if c.isalnum())
-
-
-def check_no_dupe(text):
-    '''Uses built in hasing to detect duplicates'''
-    dupes = set()
-    results = query_db("SELECT saying FROM sayings", DB_FILE)
-    for row in results:
-        quote = alpha_only(row[0])
-        dupes.add(hash(quote))
-    inst_text = alpha_only(text)
-    if hash(inst_text) in dupes:
-        logging.error("Quote '{}' is a duplicate".format(text))
-        return False
-    else:
-        return True
-
-
-def query_db(query, db, params=None):
-    '''Generic db function. Send query with optional kwonly params'''
-    with sqlite3.connect(db) as db:
-        cur = db.cursor()
-        if params:
-            logging.info("Sending Query: {} with {}".format(query, params))
-            res = cur.execute(query, params).fetchall()
-        else:
-            logging.info("Sending Query: {}".format(query))
-            res = cur.execute(query).fetchall()
-        return res
-
-
-def insert_db(query, vals, db):
-    '''Generic db function. Insert query with vals'''
-    with sqlite3.connect(db) as db:
-        cur = db.cursor()
-        try:
-            logging.info("Inserting: {} --> {}".format(query, vals))
-            cur.execute(query, vals)
-            db.commit()
-        except Exception as e:
-            logging.error("Something went wrong: {}".format(str(e)))
-
-
-def list_all():
-    '''returns all sayings from the table'''
-    return query_db("SELECT * FROM sayings", DB_FILE)
-
-
 def clean_text(text):
-    '''cleans text from common messes'''
-    if text.lstrip().startswith('...'):  # kuldge for Pip
-        return text.lstrip(" \t") \
-                   .replace("\uFFFD", "'")
-
-    else:
-        return text.lstrip(" .\t") \
-                   .replace("\uFFFD", "'")
+    '''cleans text from common messes'''  # TODO: Replace with regex
+    cleaned = text.lstrip(" \t")\
+        .replace("\uFFFD", "'")\
+        .encode("8859", "ignore")\
+        .decode("utf8", "ignore")
+    return cleaned
 
 
 def search(keyword):
     '''simple search `keyword` in string test'''
-    all_quotes = list_all()
-    search_results = [row for row in all_quotes
-                      if keyword in row[2].lower()]
+    search_query = Quote.select().where(Quote.text ** "%{}%".format(keyword))
+    search_results = [quote for quote in search_query]
     return search_results
 
 
@@ -134,53 +57,59 @@ def send_static(filename):
 @app.route('/favicon.ico', method='GET')
 def get_favicon():
     '''route for favicon'''
-    return static_file('favicon.ico', root='static')
+    return static_file('favicon.ico', root='')
 
 
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
     logging.info("{} requested a random quote".format(request.remote_addr))
-    quote, quote_no = get_quote_from_db()
-    share_link = "{}quote/{}".format(request.url, str(quote_no))
-    return template('rickbot', rickquote=quote, shareme=share_link)
-
-
-@app.route('/rick.py')
-def redirect_to_index():
-    '''Redirect old bookmarks'''
-    redirect('/')
+    quote = Quote.select().order_by(fn.random()).limit(1).get()
+    logging.info("requested quote no {}".format(quote.id))
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
+    persons = [row.name for row in Person.select()]
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=share_link,
+                    persons=persons,
+                    name=quote.person_id.name)
 
 
 @app.route('/quote', method="POST")
-def put_quote():
+def insert_quote():
     '''route for submitting quote'''
-    logging.info("{} is submitting a quote".format(request.remote_addr))
-    unval_quote = request.forms.get('saying')
-    if len(unval_quote) > 4 and check_no_dupe(unval_quote):  # arbitrary len
-        insert_quote_into_db(unval_quote)
-        return '''You are being redirected!
-        <meta HTTP-EQUIV="REFRESH" content="1; url=/">'''
-    else:
-        return "That is a duplicate or is too short"
+    unval_quote = clean_text(request.forms.get('saying'))
+    if len(unval_quote) < 4:
+        redirect('/', code=400)
+    name = str(request.forms.get('person'))
+    person = Person.get(Person.name == name)
+    try:
+        Quote.create(person_id=person, text=unval_quote,
+                     entered_at=datetime.now().replace(microsecond=0)).save()
+        return "IT WORKED! Please hit 'back' to go back"
+    except Exception as e:
+        return "Shit broke: {}".format(e)
 
 
 @app.route('/quote/<quoteno>', method="GET")
 def display_quote(quoteno):
     '''route for displaying a specific quote'''
-    logging.info("{} is asking for a specific quote".format(
-        request.remote_addr))
     try:
-        quote = get_quote_from_db(quoteno)[0]
+        quote = Quote.select().where(Quote.id == quoteno).get()
     except:
         redirect('/')  # Silently fail for better experience
-    return template('rickbot', rickquote=quote, shareme=request.url)
+    persons = [row.name for row in Person.select()]
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=request.url,
+                    persons=persons,
+                    name=quote.person_id.name)
 
 
 @app.route('/list', method="GET")
 def list_all_quotes():
     '''route for listing all quotes'''
-    quotes = list_all()
+    quotes = [i for i in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
@@ -197,7 +126,7 @@ def search_page():
 @app.route('/search/<keyword>')
 def search_for(keyword=None):
     '''route for actually executing a search'''
-    matches = search(keyword.lower())  # results are lowercase
+    matches = search(keyword)  # results are lowercase
     return template('search', search_results=matches, searchbox=False)
 
 
