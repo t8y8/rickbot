@@ -1,6 +1,6 @@
 import peewee as pw
 
-db = pw.SqliteDatabase("quotes.db", threadlocals=True)
+db = pw.SqliteDatabase("quotes.db")
 
 
 class BaseModel(pw.Model):
