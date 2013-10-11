@@ -8,7 +8,7 @@
 <div id="wrapper">
     <div id="Rickbot">
         <div id="RickHead">
-            <a href="/"><img class="Rick" src="/static/rick-f.jpg" height="480" width="360" /></a>
+            <a href="/"><img class="Rick" src="/static/{{ name }}.jpg" height="480" width="360" /></a>
             <div id="Title">
                 <table>
                     <tr>

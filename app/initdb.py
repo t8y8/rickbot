@@ -9,12 +9,11 @@ Person.create_table()
 Quote.create_table()
 
 Person.create(name="Rick").save()
-Person.create(name="Tyler").save()
-Person.create(name="Evan").save()
+Person.create(name="Joel").save()
 
 rick = Person.get(Person.name == "Rick")
-tyler = Person.get(Person.name == "Tyler")
+joel = Person.get(Person.name == "Joel")
 
 Quote.create(text="Golly Gee, quotes are the best!", entered_at=datetime.now(), person_id=rick).save()
-Quote.create(text="America is a pretty cool place", entered_at=datetime.now(), person_id=tyler).save()
+Quote.create(text="America is a pretty cool place", entered_at=datetime.now(), person_id=joel).save()
 Quote.create(text="Derp derp derp. Wow.", entered_at=datetime.now(), person_id=rick).save()
