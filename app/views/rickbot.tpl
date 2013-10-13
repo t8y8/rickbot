@@ -8,12 +8,12 @@
 <div id="wrapper">
     <div id="Rickbot">
         <div id="RickHead">
-            <a href="/"><img class="Rick" src="/static/{{ name }}.jpg" height="480" width="360" /></a>
+            <a href="/"><img class="Rick" src="/static/{{ name.lower() }}.jpg" height="480" width="360" /></a>
             <div id="Title">
                 <table>
                     <tr>
                         <td>
-                            <h1>Rickbot 3.5</h1>
+                            <h1>Rickbot 3.6</h1>
                         </td>
                     </tr>
                 </table>
