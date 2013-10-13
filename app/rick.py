@@ -6,7 +6,7 @@ from peewee import fn
 from datetime import datetime
 
 # Bottle.py imports
-from bottle import Bottle, run, template, static_file, request, redirect
+from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
 __version__ = "3.6"
@@ -21,11 +21,18 @@ config.read('config.ini')
 
 try:
     ENVIRON = config['RICKBOT']
+    SECRET_KEY = config['SECRET']['PASS']
     logging.info("Loaded config.ini")
 except:
-    ENVIRON = {'host': "127.0.0.1", 'port':
-               8080, 'server': 'wsgiref', 'debug': 'true', 'reloader': 'true'}
+    ENVIRON = {
+        'host': "127.0.0.1",
+        'port': 8080,
+        'server': 'wsgiref',
+        'debug': 'true',
+        'reloader': 'true',
+    }
     logging.info("Loaded default config dict")
+    SECRET_KEY = "America!!"
 
 # Create the explicit application object
 app = Bottle()
@@ -63,9 +70,9 @@ def get_favicon():
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
-    logging.info("{} requested a random quote".format(request.remote_addr))
     quote = Quote.select().order_by(fn.random()).limit(1).get()
-    logging.info("requested quote no {}".format(quote.id))
+    logging.info("%s requested a random quote: %s",
+                 request.remote_addr, quote.id)
     share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
     return template('rickbot',
@@ -84,10 +91,13 @@ def insert_quote():
     name = str(request.forms.get('person'))
     person = Person.get(Person.name == name)
     try:
+        logging.info("Inserting (%s, %s)", name, unval_quote)
         Quote.create(person_id=person, text=unval_quote,
                      entered_at=datetime.now().replace(microsecond=0)).save()
         return "IT WORKED! Please hit 'back' to go back"
     except Exception as e:
+        logging.error(
+            "could not insert quote (%s, %s), %s", name, unval_quote, str(e))
         return "Shit broke: {}".format(e)
 
 
@@ -128,6 +138,15 @@ def search_for(keyword=None):
     '''route for actually executing a search'''
     matches = search(keyword)  # results are lowercase
     return template('search', search_results=matches, searchbox=False)
+
+
+@app.route('/addname/<name:re:[a-zA-Z]+>')
+def add_name(name):
+    secret = request.query.get('secret', '')
+    if secret != SECRET_KEY:
+        abort(code=403, text="Nope!")
+    Person.create(name=name.title()).save()
+    return name.title() + " entered"
 
 
 @app.error(404)
