@@ -9,7 +9,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
-__version__ = "3.6"
+__version__ = "3.6.1"
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
@@ -147,6 +147,21 @@ def add_name(name):
         abort(code=403, text="Nope!")
     Person.create(name=name.title()).save()
     return name.title() + " entered"
+
+
+@app.route('/remove/<id:int>')
+def remove_quote(id):
+    secret = request.query.get('secret', '')
+    if secret != SECRET_KEY:
+        abort(code=403, text="Nope!")
+    try:
+        Quote.get(Quote.id == id).delete_instance()
+        logging.info("%s deleted quote %s", request.remote_addr)
+        return "Quote {} deleted successfully".format(id)
+    except:
+        logging.error(
+            "The id %s does not exist or has already been deleted", id)
+        abort(code=500, text="That id does not exist")
 
 
 @app.error(404)
