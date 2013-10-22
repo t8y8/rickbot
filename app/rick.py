@@ -49,6 +49,7 @@ def clean_text(text):
 
 def search(keyword):
     '''simple search `keyword` in string test'''
+    # ** is LIKE in peewee
     search_query = Quote.select().where(Quote.text ** "%{}%".format(keyword))
     search_results = [quote for quote in search_query]
     return search_results
@@ -119,7 +120,7 @@ def display_quote(quoteno):
 @app.route('/list', method="GET")
 def list_all_quotes():
     '''route for listing all quotes'''
-    quotes = [i for i in Quote.select()]
+    quotes = [q for q in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
@@ -161,7 +162,7 @@ def remove_quote(id):
     except:
         logging.error(
             "The id %s does not exist or has already been deleted", id)
-        abort(code=500, text="That id does not exist")
+        abort(code=404, text="That id does not exist")
 
 
 @app.error(404)
