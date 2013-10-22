@@ -87,7 +87,7 @@ def insert_quote():
     '''route for submitting quote'''
     unval_quote = clean_text(request.forms.get('saying'))
     if len(unval_quote) < 4:
-        redirect('/', code=400)
+        abort(code=400, text="That quote is too short.")
     name = str(request.forms.get('person'))
     person = Person.get(Person.name == name)
     try:
