@@ -26,7 +26,7 @@
                 <table>
                     <tr>
                         <td>
-                            <h2>{{rickquote + " -" + name}}</h2>
+                            <h2>{{ rickquote }}</h2>
                         </td>
                     </tr>
                 </table>
