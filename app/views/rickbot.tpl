@@ -26,7 +26,7 @@
                 <table>
                     <tr>
                         <td>
-                            <h2>{{rickquote + " -" + name}}</h2>
+                            <h2>{{ rickquote.text }}</h2>
                         </td>
                     </tr>
                 </table>
@@ -55,8 +55,10 @@
         </div>
     </div>
 <div class=clear>&nbsp;</div>
-%list_url = "/".join(shareme.split('/')[:3]) + "/list"
-    <div id="Awesomeness">Powered by Awesomeness <sup>®</sup> | Share this quote: <a href="{{ shareme }}">{{ shareme }}</a> | <a href="{{ list_url }}"> List All </a> </div>
+% root_url = "{}://{}".format(*shareme[:2])
+% share_url = "{}/quote/{}".format(root_url, rickquote.id)
+% list_url = root_url + "/list" 
+    <div id="Awesomeness">Powered by Awesomeness <sup>®</sup> | Share this quote: <a href="{{ share_url  }}">{{ share_url }}</a> | <a href="{{ list_url }}"> List All </a> </div>
 </div>
 </body>
 </html>
