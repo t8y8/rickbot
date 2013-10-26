@@ -49,6 +49,7 @@ def clean_text(text):
 
 def search(keyword):
     '''simple search `keyword` in string test'''
+    # ** is LIKE in peewee
     search_query = Quote.select().where(Quote.text ** "%{}%".format(keyword))
     search_results = [quote for quote in search_query]
     return search_results
@@ -70,9 +71,25 @@ def get_favicon():
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
-    quote = Quote.select().order_by(fn.random()).limit(1).get()
+    quote = Quote.select().order_by(fn.random()).get()
     logging.info("%s requested a random quote: %s",
                  request.remote_addr, quote.id)
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
+    persons = [row.name for row in Person.select()]
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=share_link,
+                    persons=persons,
+                    name=quote.person_id.name)
+
+
+@app.route('/<name>')
+def index_name(name):
+    '''Returns the index page with a randomly chosen RickQuote'''
+    quote = Quote.select().join(Person).where(
+        Person.name == name.title()).order_by(fn.random()).get()
+    logging.info("%s requested a random quote from %s: %s",
+                 request.remote_addr, quote.person_id.name, quote.id)
     share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
     return template('rickbot',
@@ -87,7 +104,7 @@ def insert_quote():
     '''route for submitting quote'''
     unval_quote = clean_text(request.forms.get('saying'))
     if len(unval_quote) < 4:
-        redirect('/', code=400)
+        abort(code=400, text="That quote is too short.")
     name = str(request.forms.get('person'))
     person = Person.get(Person.name == name)
     try:
@@ -119,7 +136,7 @@ def display_quote(quoteno):
 @app.route('/list', method="GET")
 def list_all_quotes():
     '''route for listing all quotes'''
-    quotes = [i for i in Quote.select()]
+    quotes = [q for q in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
 
@@ -161,7 +178,7 @@ def remove_quote(id):
     except:
         logging.error(
             "The id %s does not exist or has already been deleted", id)
-        abort(code=500, text="That id does not exist")
+        abort(code=404, text="That id does not exist")
 
 
 @app.error(404)
