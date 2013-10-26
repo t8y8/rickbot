@@ -74,10 +74,11 @@ def index():
     quote = Quote.select().order_by(fn.random()).get()
     logging.info("%s requested a random quote: %s",
                  request.remote_addr, quote.id)
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
     return template('rickbot',
-                    rickquote=quote,
-                    shareme=request.urlparts,
+                    rickquote=quote.text,
+                    shareme=share_link,
                     persons=persons,
                     name=quote.person_id.name)
 
@@ -89,10 +90,11 @@ def index_name(name):
         Person.name == name.title()).order_by(fn.random()).get()
     logging.info("%s requested a random quote from %s: %s",
                  request.remote_addr, quote.person_id.name, quote.id)
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
     return template('rickbot',
-                    rickquote=quote,
-                    shareme=request.urlparts,
+                    rickquote=quote.text,
+                    shareme=share_link,
                     persons=persons,
                     name=quote.person_id.name)
 
@@ -125,8 +127,8 @@ def display_quote(quoteno):
         redirect('/')  # Silently fail for better experience
     persons = [row.name for row in Person.select()]
     return template('rickbot',
-                    rickquote=quote,
-                    shareme=request.urlparts,
+                    rickquote=quote.text,
+                    shareme=request.url,
                     persons=persons,
                     name=quote.person_id.name)
 
