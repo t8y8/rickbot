@@ -71,9 +71,25 @@ def get_favicon():
 @app.route('/')
 def index():
     '''Returns the index page with a randomly chosen RickQuote'''
-    quote = Quote.select().order_by(fn.random()).limit(1).get()
+    quote = Quote.select().order_by(fn.random()).get()
     logging.info("%s requested a random quote: %s",
                  request.remote_addr, quote.id)
+    share_link = "{}quote/{}".format(request.url, str(quote.id))
+    persons = [row.name for row in Person.select()]
+    return template('rickbot',
+                    rickquote=quote.text,
+                    shareme=share_link,
+                    persons=persons,
+                    name=quote.person_id.name)
+
+
+@app.route('/<name>')
+def index_name(name):
+    '''Returns the index page with a randomly chosen RickQuote'''
+    quote = Quote.select().join(Person).where(
+        Person.name == name.title()).order_by(fn.random()).get()
+    logging.info("%s requested a random quote from %s: %s",
+                 request.remote_addr, quote.person_id.name, quote.id)
     share_link = "{}quote/{}".format(request.url, str(quote.id))
     persons = [row.name for row in Person.select()]
     return template('rickbot',
