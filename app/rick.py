@@ -9,7 +9,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
-__version__ = "3.6.1"
+__version__ = "3.6.3"
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
@@ -82,14 +82,18 @@ def index():
                     name=quote.person_id.name)
 
 
-@app.route('/<name>')
+@app.route('/quote/<name:re:[a-zA-Z]+>')
 def index_name(name):
     '''Returns the index page with a randomly chosen RickQuote'''
+    persons = [row.name for row in Person.select()]
+
+    if name.title() not in persons:
+        abort(code=404, text="That person has no quotes saved")
+
     quote = Quote.select().join(Person).where(
         Person.name == name.title()).order_by(fn.random()).get()
     logging.info("%s requested a random quote from %s: %s",
                  request.remote_addr, quote.person_id.name, quote.id)
-    persons = [row.name for row in Person.select()]
     return template('rickbot',
                     rickquote=quote,
                     shareme=request.urlparts,
