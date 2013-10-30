@@ -23,7 +23,7 @@ try:
     ENVIRON = config['RICKBOT']
     SECRET_KEY = config['SECRET']['PASS']
     logging.info("Loaded config.ini")
-except:
+except KeyError as e:
     ENVIRON = {
         'host': "127.0.0.1",
         'port': 8080,
@@ -39,7 +39,9 @@ app = Bottle()
 
 
 def clean_text(text):
-    '''cleans text from common messes'''  # TODO: Replace with regex
+    '''
+    cleans text by ensuring UTF-8 and stripping some bad characters
+    '''
     cleaned = text.lstrip(" \t")\
         .replace("\uFFFD", "'")\
         .encode("8859", "ignore")\
@@ -48,7 +50,9 @@ def clean_text(text):
 
 
 def search(keyword):
-    '''simple search `keyword` in string test'''
+    '''
+    simple search keyword in string test
+    '''
     # ** is LIKE in peewee
     search_query = Quote.select().where(Quote.text ** "%{}%".format(keyword))
     search_results = [quote for quote in search_query]
@@ -58,19 +62,25 @@ def search(keyword):
 # ROUTES
 @app.route('/static/<filename:path>')
 def send_static(filename):
-    '''define routes for static files'''
+    '''
+    define routes for static files
+    '''
     return static_file(filename, root='static')
 
 
 @app.route('/favicon.ico', method='GET')
 def get_favicon():
-    '''route for favicon'''
+    '''
+    route for favicon
+    '''
     return static_file('favicon.ico', root='')
 
 
 @app.route('/')
 def index():
-    '''Returns the index page with a randomly chosen RickQuote'''
+    '''
+    Returns the index page with a randomly chosen RickQuote
+    '''
     quote = Quote.select().order_by(fn.random()).get()
     logging.info("%s requested a random quote: %s",
                  request.remote_addr, quote.id)
@@ -84,7 +94,9 @@ def index():
 
 @app.route('/quote/<name:re:[a-zA-Z]+>')
 def index_name(name):
-    '''Returns the index page with a randomly chosen RickQuote'''
+    '''
+    Returns the index page with a randomly chosen RickQuote
+    '''
     persons = [row.name for row in Person.select()]
 
     if name.title() not in persons:
@@ -103,7 +115,9 @@ def index_name(name):
 
 @app.route('/quote', method="POST")
 def insert_quote():
-    '''route for submitting quote'''
+    '''
+    route for submitting quote
+    '''
     unval_quote = clean_text(request.forms.get('saying'))
     if len(unval_quote) < 4:
         abort(code=400, text="That quote is too short.")
@@ -122,7 +136,9 @@ def insert_quote():
 
 @app.route('/quote/<quoteno>', method="GET")
 def display_quote(quoteno):
-    '''route for displaying a specific quote'''
+    '''
+    route for displaying a specific quote
+    '''
     try:
         quote = Quote.select().where(Quote.id == quoteno).get()
     except:
@@ -137,7 +153,9 @@ def display_quote(quoteno):
 
 @app.route('/list', method="GET")
 def list_all_quotes():
-    '''route for listing all quotes'''
+    '''
+    route for listing all quotes
+    '''
     quotes = [q for q in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
     return template('list', list_of_quotes=quotes, req_url=req_url)
@@ -145,7 +163,9 @@ def list_all_quotes():
 
 @app.route('/search')
 def search_page():
-    '''presents user with a search box and then redirects to serach api'''
+    '''
+    presents user with a search box and then redirects to serach api
+    '''
     keyword = request.query.get("keyword")
     if keyword:
         redirect('/search/' + keyword)
@@ -154,7 +174,9 @@ def search_page():
 
 @app.route('/search/<keyword>')
 def search_for(keyword=None):
-    '''route for actually executing a search'''
+    '''
+    route for actually executing a search
+    '''
     matches = search(keyword)  # results are lowercase
     return template('search', search_results=matches, searchbox=False)
 
@@ -185,7 +207,9 @@ def remove_quote(id):
 
 @app.error(404)
 def error404(error):
-    '''Custom 404 page'''
+    '''
+    Custom 404 page
+    '''
     return "<h1>No matching route found</h1>"
 
 
