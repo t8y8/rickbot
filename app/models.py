@@ -1,7 +1,10 @@
 import peewee as pw
 
-db = pw.SqliteDatabase("quotes.db", threadlocals=True)
 
+if __name__ == "models":
+    db = pw.SqliteDatabase(":memory:")
+else:
+    db = pw.SqliteDatabase("quotes.db", threadlocals=True)
 
 class BaseModel(pw.Model):
 

@@ -43,9 +43,9 @@ def clean_text(text):
     cleans text by ensuring UTF-8 and stripping some bad characters
     '''
     cleaned = text.lstrip(" \t")\
-        .replace("\uFFFD", "'")\
-        .encode("8859", "ignore")\
-        .decode("utf8", "ignore")
+        .encode("utf8", "ignore")\
+        .decode("utf8", "ignore")\
+        .replace("\uFFFD", "'")
     return cleaned
 
 
