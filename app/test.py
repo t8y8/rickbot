@@ -4,7 +4,7 @@ import urllib.request
 import re
 
 from rick import *
-from models import *
+
 from bottle import HTTPError, HTTPResponse
 
 import initdb
