@@ -1,12 +1,11 @@
 import unittest
+from webtest import TestApp, AppError
 import urllib.request
 import re
 
-from unittest.mock import Mock, patch
-
 from rick import *
 from models import *
-from bottle import HTTPError
+from bottle import HTTPError, HTTPResponse
 
 import initdb
 
@@ -21,7 +20,7 @@ class TestRickBot(unittest.TestCase):
 	def tearDown(self):
 		pass
 
-
+	@unittest.skip
 	def test_clean_text(self):
 		
 		bad_text = "abc123 熊貓 \uFFFD"
@@ -73,6 +72,25 @@ class TestRickBot(unittest.TestCase):
 		with self.assertRaises(HTTPError):
 			 index_name("earg")
 
+	def test_insert_quote(self):
+		test_app = TestApp(app)
+		resp = test_app.post('/quote', { 'person' : "Joel", "saying": "This is the best post ever 我愛你" })
+		self.assertEqual(resp.status, "200 OK")
+
+	def test_insert_quote_and_check(self):
+		test_app = TestApp(app)
+		test_quote = "This is a good quote with unicode 我愛你"
+		resp = test_app.post('/quote', { 'person' : "Rick", "saying": test_quote })
+		quotes = [q.text for q in Quote.select()]
+		self.assertTrue(test_quote in quotes)
+
+	def test_display_quote_success(self):
+		quote = Quote.get(Quote.id == 3).text
+		assert quote in display_quote(3)
+
+	def test_display_quote_failure(self):
+		with self.assertRaises(HTTPResponse):
+			display_quote(77)
 
 if __name__ == '__main__':
 	unittest.main()

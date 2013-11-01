@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import configparser
 import logging
 from models import Person, Quote
@@ -9,7 +8,7 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
-__version__ = "3.6.3"
+__version__ = "3.6.4"
 
 # Logging
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
@@ -43,11 +42,10 @@ def clean_text(text):
     cleans text by ensuring UTF-8 and stripping some bad characters
     '''
     cleaned = text.lstrip(" \t")\
-        .encode("utf8", "ignore")\
+        .encode("latin1", "ignore")\
         .decode("utf8", "ignore")\
         .replace("\uFFFD", "'")
     return cleaned
-
 
 def search(keyword):
     '''
