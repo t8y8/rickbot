@@ -1,5 +1,4 @@
-import peewee as pw
-from models import *
+from rick import Person, Quote
 from datetime import datetime
 
 

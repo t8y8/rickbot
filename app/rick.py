@@ -1,7 +1,7 @@
 import configparser
 import logging
-from models import Person, Quote
-from peewee import fn
+import peewee as pw
+
 from datetime import datetime
 
 # Bottle.py imports
@@ -21,6 +21,7 @@ config.read('config.ini')
 try:
     ENVIRON = config['RICKBOT']
     SECRET_KEY = config['SECRET']['PASS']
+    DB_FILE = config['DATABASE']["db"]
     logging.info("Loaded config.ini")
 except KeyError as e:
     ENVIRON = {
@@ -32,6 +33,41 @@ except KeyError as e:
     }
     logging.info("Loaded default config dict")
     SECRET_KEY = "America!!"
+    DB_FILE = ":memory:"
+
+
+#
+# Models
+#
+
+db = pw.SqliteDatabase(DB_FILE, threadlocals=True)
+
+
+class BaseModel(pw.Model):
+
+    class Meta:
+        database = db
+
+
+class Person(BaseModel):
+    name = pw.CharField(unique=True)
+    id = pw.PrimaryKeyField()
+
+
+class Quote(BaseModel):
+    id = pw.PrimaryKeyField()
+    text = pw.CharField()
+    entered_at = pw.DateTimeField()
+    person_id = pw.ForeignKeyField(Person, related_name="quotes")
+
+    class Meta:
+        indexes = (
+            (('text', 'person_id'), True),
+        )
+
+#
+# Application
+#
 
 # Create the explicit application object
 app = Bottle()
@@ -46,6 +82,7 @@ def clean_text(text):
         .decode("utf8", "ignore")\
         .replace("\uFFFD", "'")
     return cleaned
+
 
 def search(keyword):
     '''
@@ -79,7 +116,7 @@ def index():
     '''
     Returns the index page with a randomly chosen RickQuote
     '''
-    quote = Quote.select().order_by(fn.random()).get()
+    quote = Quote.select().order_by(pw.fn.random()).get()
     logging.info("%s requested a random quote: %s",
                  request.remote_addr, quote.id)
     persons = [row.name for row in Person.select()]
@@ -101,7 +138,7 @@ def index_name(name):
         abort(code=404, text="That person has no quotes saved")
 
     quote = Quote.select().join(Person).where(
-        Person.name == name.title()).order_by(fn.random()).get()
+        Person.name == name.title()).order_by(pw.fn.random()).get()
     logging.info("%s requested a random quote from %s: %s",
                  request.remote_addr, quote.person_id.name, quote.id)
     return template('rickbot',
