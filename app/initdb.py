@@ -1,23 +1,27 @@
-import peewee as pw
-from models import *
+from rick import Person, Quote
 from datetime import datetime
 
-Person.drop_table(True)
-Quote.drop_table(True)
 
-Person.create_table()
-Quote.create_table()
+def main():
+	Person.drop_table(True)
+	Quote.drop_table(True)
 
-Person.create(name="Rick").save()
-Person.create(name="Joel").save()
-Person.create(name="Rebecca").save()
+	Person.create_table()
+	Quote.create_table()
 
-rick = Person.get(Person.name == "Rick")
-joel = Person.get(Person.name == "Joel")
-rebecca = Person.get(Person.name == "Rebecca")
+	Person.create(name="Rick").save()
+	Person.create(name="Joel").save()
+	Person.create(name="Rebecca").save()
 
-Quote.create(text="Golly Gee, quotes are the best!", entered_at=datetime.now(), person_id=rick).save()
-Quote.create(text="America is a pretty cool place", entered_at=datetime.now(), person_id=joel).save()
-Quote.create(text="Derp derp derp. Wow.", entered_at=datetime.now(), person_id=rick).save()
-Quote.create(text="I hate the things.", entered_at=datetime.now(), person_id=rebecca).save()
-Quote.create(text="What does the fox say", entered_at=datetime.now(), person_id=rick).save()
+	rick = Person.get(Person.name == "Rick")
+	joel = Person.get(Person.name == "Joel")
+	rebecca = Person.get(Person.name == "Rebecca")
+
+	Quote.create(text="Golly Gee, quotes are the best!", entered_at=datetime.now(), person_id=rick).save()
+	Quote.create(text="America is a pretty cool place", entered_at=datetime.now(), person_id=joel).save()
+	Quote.create(text="Derp derp derp. Wow.", entered_at=datetime.now(), person_id=rick).save()
+	Quote.create(text="I hate the things.", entered_at=datetime.now(), person_id=rebecca).save()
+	Quote.create(text="What does the fox say", entered_at=datetime.now(), person_id=rick).save()
+
+if __name__ == '__main__':
+	main()
