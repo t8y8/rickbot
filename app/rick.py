@@ -78,8 +78,6 @@ def clean_text(text):
     cleans text by ensuring UTF-8 and stripping some bad characters
     '''
     cleaned = text.lstrip(" \t")\
-        .encode("latin1", "ignore")\
-        .decode("utf8", "ignore")\
         .replace("\uFFFD", "'")
     return cleaned
 
@@ -153,10 +151,10 @@ def insert_quote():
     '''
     route for submitting quote
     '''
-    unval_quote = clean_text(request.forms.get('saying'))
+    unval_quote = clean_text(request.forms.getunicode('saying'))
     if len(unval_quote) < 4:
         abort(code=400, text="That quote is too short.")
-    name = str(request.forms.get('person'))
+    name = str(request.forms.getunicode('person'))
     person = Person.get(Person.name == name)
     try:
         logging.info("Inserting (%s, %s)", name, unval_quote)
