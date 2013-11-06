@@ -8,11 +8,20 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
-__version__ = "3.6.4"
+__version__ = "3.6.5"
 
+
+#
 # Logging
+#
+
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
                     format='%(levelname)s - [%(asctime)s] %(message)s')
+
+
+#
+# Config
+#
 
 config = configparser.ConfigParser()
 config.read('config.ini')
