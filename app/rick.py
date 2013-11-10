@@ -200,7 +200,7 @@ def list_all_quotes():
     '''
     persons = [p.name for p in Person.select()]
     quotes = [q for q in Quote.select()]
-    req_url = request.urlparts[1]  # Send hostname not full url
+    req_url = request.urlparts.netloc  # Send hostname not full url
     return template('list',
                     list_of_quotes=quotes,
                     req_url=req_url,
