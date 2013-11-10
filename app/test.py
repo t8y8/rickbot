@@ -102,5 +102,26 @@ class TestRickBot(unittest.TestCase):
         self.assertEqual(resp.status, "200 OK")
         self.assertIn(keyword, resp)
 
+    def test_list_all(self):
+        # Regexes
+        PERSON_RE = r"<h2>(.*?)</h2>"
+        LIST_QUOTE_RE = r"<a.+/quote/\d+.*>"
+        
+        #Test Application
+        test_app = TestApp(app)
+        
+        #Expecteds
+        person_count = sum([1 for i in Person.select()])
+        quote_count = sum([1 for i in Quote.select()])
+        
+        #Do it
+        resp = test_app.get('/list')
+        response_person_count = len(re.findall(PERSON_RE, str(resp)))
+        response_quote_count = len(re.findall(LIST_QUOTE_RE, str(resp)))
+        
+        #Assertions
+        self.assertEqual(person_count, response_person_count)
+        self.assertEqual(quote_count, response_quote_count)
+
 if __name__ == '__main__':
     unittest.main()
