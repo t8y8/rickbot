@@ -185,7 +185,7 @@ def display_quote(quoteno):
         quote = Quote.select().where(Quote.id == quoteno).get()
     except:
         redirect('/')  # Silently fail for better experience
-    persons = [row.name for row in Person.select()]
+    persons = [p.name for p in Person.select()]
     return template('rickbot',
                     rickquote=quote,
                     shareme=request.urlparts,
@@ -198,9 +198,13 @@ def list_all_quotes():
     '''
     route for listing all quotes
     '''
+    persons = [p.name for p in Person.select()]
     quotes = [q for q in Quote.select()]
     req_url = request.urlparts[1]  # Send hostname not full url
-    return template('list', list_of_quotes=quotes, req_url=req_url)
+    return template('list',
+                    list_of_quotes=quotes,
+                    req_url=req_url,
+                    people=persons)
 
 
 @app.route('/search')
