@@ -8,11 +8,20 @@ from datetime import datetime
 from bottle import Bottle, run, template, static_file, request, redirect, abort
 
 
-__version__ = "3.6.4"
+__version__ = "3.6.5"
 
+
+#
 # Logging
+#
+
 logging.basicConfig(filename="rickbot.log", level=logging.INFO,
                     format='%(levelname)s - [%(asctime)s] %(message)s')
+
+
+#
+# Config
+#
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -176,7 +185,7 @@ def display_quote(quoteno):
         quote = Quote.select().where(Quote.id == quoteno).get()
     except:
         redirect('/')  # Silently fail for better experience
-    persons = [row.name for row in Person.select()]
+    persons = [p.name for p in Person.select()]
     return template('rickbot',
                     rickquote=quote,
                     shareme=request.urlparts,
@@ -189,9 +198,13 @@ def list_all_quotes():
     '''
     route for listing all quotes
     '''
+    persons = [p.name for p in Person.select()]
     quotes = [q for q in Quote.select()]
-    req_url = request.urlparts[1]  # Send hostname not full url
-    return template('list', list_of_quotes=quotes, req_url=req_url)
+    req_url = request.urlparts.netloc  # Send hostname not full url
+    return template('list',
+                    list_of_quotes=quotes,
+                    req_url=req_url,
+                    people=persons)
 
 
 @app.route('/search')
