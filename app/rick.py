@@ -165,8 +165,9 @@ def insert_quote():
         abort(code=400, text="That quote is too short.")
     name = str(request.forms.getunicode('person'))
     person = Person.get(Person.name == name)
+    r_ip = request.remote_addr
     try:
-        logging.info("Inserting (%s, %s)", name, unval_quote)
+        logging.info("%s inserting (%s, %s)", r_ip, name, unval_quote)
         Quote.create(person_id=person, text=unval_quote,
                      entered_at=datetime.now().replace(microsecond=0)).save()
         return "IT WORKED! Please hit 'back' to go back"
